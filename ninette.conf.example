@@ -1,0 +1,92 @@
+[general]
+# path and filename to the SQLite database file (it will be created automatically)
+database_filename = /var/lib/ninette.db
+# optional HTTP proxy to use for all outgoing HTTP requests
+#http_proxy = http://127.0.0.1:3128
+# HTTP user agent to use for all outgoing HTTP requests
+#http_useragent = Ninette/1.0
+# Timeout in seconds for all outgoing HTTP requests
+timeout = 60.0
+# logging format (see https://docs.python.org/3/library/logging.html#logrecord-attributes for details)
+log_format=%(asctime)s ninette[%(process)s]: [%(levelname)+8s] [%(name)-24s] {dry_run}%(message)s
+# if running in foreground (with -f), check for new warnings every X seconds
+fetch_interval = 300
+# maximum age in days before already processed alerts are deleted from the database
+alerts_max_days = 180
+# Space separated, case-insensitive list of all language codes for which alerts should be generated
+# Note not all events contain language codes or events in multiple languages or
+# the language codes are in different format, so list all which should be considered.
+# Only the first matching event is processed.
+language_codes = de de-de
+
+# Provider for the NINA warnings in Germany (accidents or disasters)
+[provider_nina]
+# set to false to (temporarily) disable this provider
+enable = true
+# if running in foreground (with -f), check for new warnings every X seconds,
+# should be higher than the global fetch_interval (see above) otherwise the global interval wins
+fetch_interval = 900
+# Python path to the provider class, it must be a subclass of ninette.provider.nina.ProviderBase
+class_path = ninette.provider.nina.NinaProvider
+# API URL of the NINA API provided by bund.dev
+base_url = https://nina.api.proxy.bund.dev/api31
+# set to false to disable Test alerts sent by the API, such alerts are rarely seen
+enable_test_alerts = true
+
+# Locations
+# format: ags_<user-definable-name> = <location-code>
+# location-code is the "Amtlicher Gemeindeschlüssel" with the last seven digits of the
+# number replaced by zeros, see README.md and
+# https://www.xrepository.de/details/urn:de:bund:destatis:bevoelkerungsstatistik:schluessel:rs.
+ags_aachen = 051540000000
+ags_koeln = 053150000000
+ags_rosenheim = 091870000000
+ags_husum = 010540000000
+
+# Provider for breaking news of the German television news service Tagesschau
+[provider_tagesschau]
+enable = true
+fetch_interval = 240
+class_path = ninette.provider.tagesschau.TagesschauBreakingNewsProvider
+api_url = https://www.tagesschau.de/ipa/v1/web/headerapp/
+
+# Test provider to create an alert every hour, useful for testing e.g. alerters
+[provider_ping]
+enable = false
+fetch_interval = 240
+class_path = ninette.provider.ping.PingProvider
+
+# Alerter to send an email for each alert
+[alerter_email]
+enable = true
+class_path = ninette.alerter.mail.EmailAlerter
+# sender address
+from_address = sender@example.com
+# comma separated list of recipients
+recipients = alerts@example.com
+# whether to attach the original event (JSON object from the API) to the event as attachment
+attach_original_event = true
+# SMTP settings
+smtp_server = localhost
+smtp_port = 25
+smtp_username =
+smtp_password =
+smtp_use_tls = false
+
+# Alerter to create alerts by executing an arbitrary command
+[alerter_command]
+enable = false
+class_path = ninette.alerter.command.CommandAlerter
+# Command to be executed on new alerts, possible placeholders:
+# {alert_identifier}
+# {alert_title}
+# {alert_text}
+# {alert_expire_date}
+# {alert_alert_type}
+# {alert_provider_name}
+# {alert_attachments} (comma separated list of attachment paths, might be missing - then "None")
+command = bash /usr/local/ninette_alert_command.sh {alert_attachments} '{alert_identifier}' '{alert_title}' {alert_provider_name} '{alert_text}'
+# whether the alert_text should be passed to the command via standard input
+alert_text_via_stdin = false
+# whether to attach the original event (JSON object from the API) to the event as attachment
+attach_original_event = false
