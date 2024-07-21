@@ -17,10 +17,10 @@ upload-check:
 	twine check dist/*
 
 upload: upload-check
-	twine upload --sign --identity ${GPG_KEY_ID} --repository pypi dist/*
+	twine upload --repository pypi dist/*
 
 upload-test: upload-check
-	twine upload --sign --identity ${GPG_KEY_ID} --repository pypi-test dist/*
+	twine upload --repository pypi-test dist/*
 
 tag:
 	# ensure $VERSION is set

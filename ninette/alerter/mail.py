@@ -2,22 +2,21 @@
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
 
+import smtplib
 from email.message import EmailMessage
 from email.utils import formatdate
-import smtplib
 
 from ninette.alerter.base import AlerterBase
 from ninette.constants import APP_NAME_VERSION
 
 
-class EmailAlerterSMTPException(Exception):
+class EmailAlerterSMTPError(Exception):
     pass
 
 
 class EmailAlerter(AlerterBase):
 
-    # pylint:disable=too-many-arguments
-    def __init__(self, config, recipients, from_address, smtp_server, smtp_port,
+    def __init__(self, config, recipients, from_address, smtp_server, smtp_port,  # noqa: PLR0913
                  smtp_username, smtp_password, smtp_use_tls, attach_original_event):
         super().__init__(config)
         self.from_address = from_address
@@ -95,9 +94,9 @@ class EmailAlerter(AlerterBase):
             response = connection.send_message(email_message, self.from_address, [recipient])
             if response:
                 for failed_recipient, error in response.items():
-                    raise EmailAlerterSMTPException(
-                        f'Unable to send email to "{failed_recipient}": {error}')
+                    errmsg = f'Unable to send email to "{failed_recipient}": {error}'
+                    raise EmailAlerterSMTPError(errmsg)
             connection.quit()
         except OSError as exc:
-            raise EmailAlerterSMTPException(
-                f'Unable to send email to "{recipient}": {exc}') from exc
+            errmsg = f'Unable to send email to "{recipient}": {exc}'
+            raise EmailAlerterSMTPError(errmsg) from exc

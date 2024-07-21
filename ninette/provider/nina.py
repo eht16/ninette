@@ -10,15 +10,15 @@ import staticmaps
 from ninette.provider.base import ProviderBase
 
 
-class SkipAlreadyProcessedAlert(Exception):
+class SkipAlreadyProcessedAlertError(Exception):
     pass
 
 
-class SkipFutureAlert(Exception):
+class SkipFutureAlertError(Exception):
     pass
 
 
-class SkipPastAlert(Exception):
+class SkipPastAlertError(Exception):
     pass
 
 
@@ -108,12 +108,12 @@ Mehr Informationen unter: {url}
                     self._alerts.append(alert)
                     self._mark_alert_as_processed(alert)
                 else:
-                    raise SkipAlreadyProcessedAlert()
-            except SkipFutureAlert:
+                    raise SkipAlreadyProcessedAlertError  # noqa: TRY301
+            except SkipFutureAlertError:
                 self._logger.debug('Skipping not yet effective alert "%s"', alert.identifier)
-            except SkipPastAlert:
+            except SkipPastAlertError:
                 self._logger.debug('Skipping past alert "%s"', alert.identifier)
-            except SkipAlreadyProcessedAlert:
+            except SkipAlreadyProcessedAlertError:
                 self._logger.debug('Skipping already processed alert "%s"', alert.identifier)
             except Exception as exc:
                 self._logger.error('Error while processing alert "%s": %s', message['id'], exc)
@@ -156,18 +156,18 @@ Mehr Informationen unter: {url}
 
             if alert_needs_to_be_processed:
                 return True  # process alerts which are not present in the database
-            else:
-                # if we got an alert, query its expire date, convert to datetime and set on alert
-                expire_date = self._database.get_alert_expire_date(alert)
-                if expire_date:
-                    alert.expire_date = datetime.strptime(expire_date, '%Y-%m-%d %H:%M:%S%z')
-                # re-process existing alerts with an expire date set
-                # ignore alerts present in the database without an expire_date
-                return alert.expire_date is not None
+
+            # if we got an alert, query its expire date, convert to datetime and set on alert
+            expire_date = self._database.get_alert_expire_date(alert)
+            if expire_date:
+                alert.expire_date = datetime.strptime(expire_date, '%Y-%m-%d %H:%M:%S%z')
+            # re-process existing alerts with an expire date set
+            # ignore alerts present in the database without an expire_date
+            return alert.expire_date is not None
 
         return False
 
-    def _fetch_alert_details(self, alert):  # pylint: disable=too-many-locals,too-many-statements
+    def _fetch_alert_details(self, alert):  # noqa: PLR0915
         # fetch alert details
         api_url = self.NINA_URL_ALERT_DETAILS.format(api_url=self._base_url,
                                                      identifier=alert.identifier)
@@ -192,13 +192,13 @@ Mehr Informationen unter: {url}
 
         # skip the alert for now, re-process it once it is effective
         if effective and effective > now:
-            raise SkipFutureAlert()
+            raise SkipFutureAlertError
         # skip past alerts
         if expires and expires <= now:
-            raise SkipPastAlert()
+            raise SkipPastAlertError
         # skip processed alerts with an expire_date set
         if expires and alert.expire_date:
-            raise SkipAlreadyProcessedAlert()
+            raise SkipAlreadyProcessedAlertError
 
         date = self._parse_date(detail_message['sent'])
         headline = detail_info.get('headline', '')

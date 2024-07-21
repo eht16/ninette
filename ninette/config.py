@@ -4,7 +4,7 @@
 
 from configparser import ConfigParser
 from importlib import import_module
-import os
+from pathlib import Path
 
 from ninette.configuration import Configuration
 
@@ -28,7 +28,7 @@ class NinetteConfigParser:
     def _fetch_config_file_paths(self):
         self._config_file_paths = (
             '/etc/ninette.conf',
-            os.path.expanduser('~/.config/ninette.conf'),
+            Path('~/.config/ninette.conf').expanduser(),
             'ninette.conf')
 
     def _init_config(self):
@@ -38,14 +38,15 @@ class NinetteConfigParser:
         self._config_parser = ConfigParser()
         # read config file from location as specified via command line but fail it if doesn't exist
         if self._options.config_file_path:
-            with open(self._options.config_file_path, encoding='utf-8') as config_file_h:
+            with Path(self._options.config_file_path).open('r', encoding='utf-8') as config_file_h:
                 self._config_parser.read_file(config_file_h)
                 return
         # otherwise try pre-defined config file locations
         elif self._config_parser.read(self._config_file_paths):
             return
         # if we still didn't read any configuration file, bail out
-        raise RuntimeError('No config file found')
+        errmsg = 'No config file found'
+        raise RuntimeError(errmsg)
 
     def _parse_config(self):
         for section_name in self._config_parser.sections():

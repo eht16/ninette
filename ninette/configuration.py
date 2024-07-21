@@ -10,7 +10,7 @@ class Module:
         self.class_path = None
 
 
-class Configuration:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
+class Configuration:
 
     def __init__(self):
         self.database_filename = None

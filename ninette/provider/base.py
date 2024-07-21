@@ -28,10 +28,8 @@ class ProviderBase(ModuleBase):
             return True
 
         now = datetime.now(timezone.utc)
-        if now >= (self._last_runtime + timedelta(seconds=self._fetch_interval)):
-            return True
-
-        return False
+        next_execution_datetime = self._last_runtime + timedelta(seconds=self._fetch_interval)
+        return now >= next_execution_datetime
 
     def run(self):
         self._last_runtime = datetime.now(timezone.utc)

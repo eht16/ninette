@@ -2,9 +2,9 @@
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
 
+import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
-import sqlite3
 
 
 DATABASE_SCHEMA_STATEMENTS = [
@@ -20,7 +20,7 @@ DATABASE_SCHEMA_STATEMENTS = [
     'CREATE INDEX IF NOT EXISTS `idx_alert_provider` ON `alert` (`provider`);',
     'CREATE INDEX IF NOT EXISTS `idx_entry_date` ON `alert` (`entry_date`);',
     'CREATE INDEX IF NOT EXISTS `idx_expire_date` ON `alert` (`expire_date`);',
-    'CREATE UNIQUE INDEX IF NOT EXISTS `idx_alert` ON `alert` (`alert_id`, `alert_type`, `provider`);'  # noqa
+    'CREATE UNIQUE INDEX IF NOT EXISTS `idx_alert` ON `alert` (`alert_id`, `alert_type`, `provider`);'  # noqa: E501
 ]
 
 
@@ -80,7 +80,7 @@ class Database:
         query = f'''DELETE FROM `alert`
                     WHERE `provider`= ?
                       AND (`expire_date` < datetime("now")
-                            OR `entry_date` < datetime('now', "-{keep_alert_days} days"));'''
+                            OR `entry_date` < datetime('now', "-{keep_alert_days} days"));'''  # noqa: S608
         with self._connect() as connection:
             cursor = connection.cursor()
             cursor.execute(query, (provider,))

@@ -2,14 +2,15 @@
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
 
-from tempfile import NamedTemporaryFile
-import os
+import contextlib
 import subprocess
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from ninette.alerter.base import AlerterBase
 
 
-class CommandAlerterException(Exception):
+class CommandAlerterError(Exception):
     pass
 
 
@@ -42,8 +43,9 @@ class CommandAlerter(AlerterBase):
             try:
                 self._process_alert(alert)
             except Exception as exc:
-                self._logger.error('Error while executing command for alert "%s": %s',
-                                   alert.identifier, exc)
+                self._logger.error(
+                    'Error while executing command for alert "%s": %s', alert.identifier, exc)
+
 
     def _process_alert(self, alert):
         attachments_filenames = self._create_attachments_temporary_files(alert)
@@ -92,14 +94,14 @@ class CommandAlerter(AlerterBase):
             return 'dry-run activate, command was not executed.'
 
         try:
-            output_bytes = subprocess.check_output(command, shell=True,  # noqa: SCS103
+            output_bytes = subprocess.check_output(command, shell=True,  # noqa: S602
                                                    input=alert_text_stdin, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as exc:
             output = self._process_command_output(exc.output)
             command_for_log = f'{command[:60]}...'
             exit_code = exc.returncode
             msg = f'Command "{command_for_log}" failed with exit code {exit_code}. Output: {output}'
-            raise CommandAlerterException(msg) from exc
+            raise CommandAlerterError(msg) from exc
 
         return self._process_command_output(output_bytes)
 
@@ -113,7 +115,5 @@ class CommandAlerter(AlerterBase):
             return
 
         for filename in filenames:
-            try:
-                os.unlink(filename)
-            except FileNotFoundError:
-                pass
+            with contextlib.suppress(FileNotFoundError):
+                Path(filename).unlink()

@@ -2,16 +2,16 @@
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
 
-from time import sleep
-from traceback import format_exc
 import logging
 import os
+from time import sleep
+from traceback import format_exc
 
 from ninette.constants import APP_NAME_VERSION
 from ninette.database import Database
 
 
-class StopFetchLoop(Exception):
+class StopFetchLoopError(Exception):
     pass
 
 
@@ -34,9 +34,9 @@ class NinetteRunner:
             try:
                 self._fetch_alerts()
                 self._wait_for_next_refresh_interval()
-            except (StopFetchLoop, KeyboardInterrupt):
+            except (StopFetchLoopError, KeyboardInterrupt):
                 break
-            except Exception as exc:  # pylint: disable=broad-except
+            except Exception as exc:
                 if self._config.debug:
                     traceback = format_exc()
                     traceback = f'\n{traceback}'
@@ -102,7 +102,7 @@ class NinetteRunner:
     def _wait_for_next_refresh_interval(self):
         if not self._config.foreground:
             # raise a dedicated exception to break the while(true) loop in self.process()
-            raise StopFetchLoop()
+            raise StopFetchLoopError
 
         self._logger.debug('Sleeping for %s seconds', self._config.fetch_interval)
         sleep(self._config.fetch_interval)

@@ -18,7 +18,7 @@ def main():
             controller.show_version()
         else:
             controller.process()
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:
         if options.debug:
             raise
 

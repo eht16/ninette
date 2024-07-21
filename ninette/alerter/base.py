@@ -10,5 +10,5 @@ from ninette.module import ModuleBase
 class AlerterBase(ModuleBase):
 
     @abstractmethod
-    def process(self, alerts):  # noqa
+    def process(self, alerts):
         raise NotImplementedError
