@@ -48,7 +48,7 @@ ags_husum = 010540000000
 enable = true
 fetch_interval = 240
 class_path = ninette.provider.tagesschau.TagesschauBreakingNewsProvider
-api_url = https://www.tagesschau.de/ipa/v1/web/headerapp/
+api_url = https://www.tagesschau.de/api2u/homepage
 
 # Test provider to create an alert every hour, useful for testing e.g. alerters
 [provider_ping]
